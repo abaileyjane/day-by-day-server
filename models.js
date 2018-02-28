@@ -7,7 +7,8 @@ const userSchema = mongoose.Schema({
 	password: {type:String, required: true},
 	habits: [{title: String}],
 	dailyRecord:[
-		{date: Date, log:[
+		{date: String,
+			 log:[
 				{habit:String, completed: Boolean}
 				]
 		}

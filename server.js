@@ -44,6 +44,7 @@ app.get('/users/:userEmail', (req,res) =>{
 	});
 })
 
+
 app.post('/users', jsonParser, (req,res)=>{
 	User
 		.create({
@@ -57,6 +58,25 @@ app.post('/users', jsonParser, (req,res)=>{
 			console.log(err);
 			res.status(500).json({message: 'Internal Server Error'})
 		})
+})
+
+app.put('/users/:userEmail', jsonParser, (req, res)=>{
+	const toUpdate = {};
+	const updatableFields = ['firstName', 'lastName', 'email', 'password', 'habits', 'dailyRecord'];
+
+	updatableFields.forEach(field => {
+		if(field in req.body){
+			toUpdate[field] = req.body[field];
+		}
+	})
+
+	User
+		.findOne({email:req.params.userEmail})
+		.update({$set: toUpdate})
+		.then(user => res.status(204).json(user))
+		.catch(err=> {
+			console.log(err);
+			res.status(500).json({message:"Internal Server Error"})})
 })
 
 function runServer(databaseUrl, port=PORT){
