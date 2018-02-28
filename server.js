@@ -79,6 +79,16 @@ app.put('/users/:userEmail', jsonParser, (req, res)=>{
 			res.status(500).json({message:"Internal Server Error"})})
 })
 
+app.delete('/users/:userEmail', (req, res)=>{
+	User
+		.findOne({email: req.params.userEmail})
+		.remove()
+		.then(user=>res.status(204).end())
+		.catch(err=>{
+			console.log(err);
+			res.status(500).json({message: 'Internal Server Error'})})
+})
+
 function runServer(databaseUrl, port=PORT){
 	return new Promise((resolve, reject)=>{
 		mongoose.connect(databaseUrl, {useMongoClient: true}, err=>{
