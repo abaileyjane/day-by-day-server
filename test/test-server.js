@@ -135,7 +135,7 @@ describe('API Function', function(){
         .then(function(user){
           expect(user.habits).to.have.lengthOf(1);
           expect(user.dailyLog).to.have.lengthOf(0);
-          expect(user)to.include.keys('firstName','lastName','email','habits','dailyLog')
+          expect(user).to.include.keys('firstName','lastName','email','habits','dailyLog')
         })
     })
   })
