@@ -11,7 +11,7 @@ chai.use(chaiHttp);
 
 const{User}=require('../models');
 const{runServer, closeServer, server, app}=require('../server');
-const{TEST_DATABASE_URL,TEST_PORT}=require('../config');
+const{TEST_DATABASE_URL, TEST_PORT}=require('../config');
 
 
 
