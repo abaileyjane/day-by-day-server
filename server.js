@@ -7,6 +7,8 @@ const mongoose=require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const passport = require('passport')
+const config = require('./config');
+
 mongoose.Promise=global.Promise;
 
 app.use(jsonParser);
@@ -24,7 +26,6 @@ app.use(function (req, res, next) {
 
 const {PORT, DATABASE_URL} = require('./config');
 
-const { router: authRouter, localStrategy, jwtStrategy } = require('./auth');
 
 passport.use(localStrategy);
 passport.use(jwtStrategy);
@@ -33,12 +34,12 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 
 const {User} = require('./models');
-app.use('/auth', authRouter)
 app.get('/', (req,res)=>{
 	res.status(200)
 })
 
 app.get('/users',  (req, res) =>{
+	console.log(Date())
 	User
 		.find()
 		.then(users => {
@@ -203,6 +204,32 @@ function closeServer() {
     });
   });
 }
+
+//authorization section
+const createAuthToken = function(user) {
+  return jwt.sign({user}, config.JWT_SECRET, {
+    subject: user.email,
+    expiresIn: config.JWT_EXPIRY,
+    algorithm: 'HS256'
+  });
+};
+
+const localAuth = passport.authenticate('local', {session: false});
+app.use(bodyParser.json());
+// The user provides a username and password to login
+app.post('auth/login', localAuth, (req, res) => {
+	console.log('post request fired')
+  const authToken = createAuthToken(req.user.serialize());
+  res.json({authToken});
+});
+
+const jwtAuth = passport.authenticate('jwt', {session: false});
+
+// The user exchanges a valid JWT for a new one with a later expiration
+app.post('auth/refresh', jwtAuth, (req, res) => {
+  const authToken = createAuthToken(req.user);
+  res.json({authToken});
+});
 
 if (require.main === module) {
   runServer(DATABASE_URL).catch(err => console.error(err));
