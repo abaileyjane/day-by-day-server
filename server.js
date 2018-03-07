@@ -34,7 +34,11 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 const {User} = require('./models');
 
-app.get('/users', jwtAuth, (req, res) =>{
+app.get('/', (req,res)=>{
+	res.status(200)
+})
+
+app.get('/users',  (req, res) =>{
 	User
 		.find()
 		.then(users => {
