@@ -11,7 +11,7 @@ chai.use(chaiHttp);
 
 const{User}=require('../models');
 const{runServer, closeServer, server, app}=require('../server');
-const{TEST_DATABASE_URL,TEST_PORT}=require('../config');
+const{TEST_DATABASE_URL, TEST_PORT}=require('../config');
 
 
 
@@ -135,7 +135,7 @@ describe('API Function', function(){
         .then(function(user){
           expect(user.habits).to.have.lengthOf(1);
           expect(user.dailyLog).to.have.lengthOf(0);
-          expect(user)to.include.keys('firstName','lastName','email','habits','dailyLog')
+          expect(user).to.include.keys('firstName','lastName','email','habits','dailyLog')
         })
     })
   })
