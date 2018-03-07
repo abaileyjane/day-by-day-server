@@ -33,7 +33,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 
 const {User} = require('./models');
-
+app.use('/auth', authRouter)
 app.get('/', (req,res)=>{
 	res.status(200)
 })
@@ -140,6 +140,7 @@ app.post('/users', jsonParser, (req,res)=>{
 			})
 		})
 	})
+
 
 
 app.put('/users/:userEmail', jwtAuth, jsonParser, (req, res)=>{
