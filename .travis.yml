@@ -1,4 +1,9 @@
 before_script: chmod 0777 ./node_modules/.bin/mocha
-
 language: node_js
 node_js: node
+deploy:
+  provider: heroku
+  api_key: ''
+  app: day-by-day-server
+  on:
+    repo: abaileyjane/day-by-day-server
