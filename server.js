@@ -8,9 +8,9 @@ const path = require('path');
 const cors = require('cors');
 const passport = require('passport')
 const config = require('./config');
-
+const {localStrategy, jwtStrategy} = require('./auth/strategies.js')
 mongoose.Promise=global.Promise;
-
+ 
 app.use(jsonParser);
 app.use(cors());
 
@@ -217,16 +217,15 @@ const createAuthToken = function(user) {
 const localAuth = passport.authenticate('local', {session: false});
 app.use(bodyParser.json());
 // The user provides a username and password to login
-app.post('auth/login', localAuth, (req, res) => {
+app.post('/auth/login', localAuth, (req, res) => {
 	console.log('post request fired')
   const authToken = createAuthToken(req.user.serialize());
   res.json({authToken});
 });
 
-const jwtAuth = passport.authenticate('jwt', {session: false});
 
 // The user exchanges a valid JWT for a new one with a later expiration
-app.post('auth/refresh', jwtAuth, (req, res) => {
+app.post('/auth/refresh', jwtAuth, (req, res) => {
   const authToken = createAuthToken(req.user);
   res.json({authToken});
 });
