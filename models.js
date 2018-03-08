@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt-nodejs');
 
 
 const userSchema = mongoose.Schema({
-	userId: String
+	userId: String,
 	habits: [{title: String}],
 	dailyLog:[
 		{date: String,
@@ -19,7 +19,7 @@ userSchema.methods.serialize = function(){
 	return{
 		habits: this.habits,
 		dailyLog: this.dailyLog,
-		
+
 	}
 }
 

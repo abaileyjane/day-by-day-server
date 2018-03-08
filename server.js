@@ -9,15 +9,14 @@ const cors = require('cors');
 const config = require('./config');
 var jwt = require('express-jwt');
 var jwks = require('jwks-rsa');
-const {localStrategy, jwtStrategy} = require('./auth/strategies.js')
 mongoose.Promise=global.Promise;
-mongoose.connect(DATABASE_URL);
  
+const {PORT, DATABASE_URL,CLIENT_ORIGIN} = require('./config');
 
 app.use(jsonParser);
-app.use(cors({origin: CLIENT_ORIGIN})
+app.use(cors({origin: CLIENT_ORIGIN}));
 
-const {PORT, DATABASE_URL} = require('./config');
+mongoose.connect(DATABASE_URL);
 
 var jwtCheck = jwt({
     secret: jwks.expressJwtSecret({
@@ -38,7 +37,7 @@ const {User} = require('./models');
 app.get('/users', jwtCheck,  (req, res) =>{
 
 	user.user_metadata = user.user_metadata || {};
-  	user.user_metadata.user_id = user.user_metadata. || "userIdMeta";
+  	user.user_metadata.user_id = user.user_metadata || "userIdMeta";
 	if(User.findOne({'userId': userIdMeta}).count()===0){
 		res.json({habits:[],
 				dailyLog:[]}
@@ -49,7 +48,7 @@ app.get('/users', jwtCheck,  (req, res) =>{
 			res.status(500).json({message:"Internal Server Error"})
 		})
 	}
-	else {
+	else {User.findOne({'userId': userIdMeta})
 		.then(users => {
 			res.json({
 				users: users.map(
@@ -67,7 +66,7 @@ app.get('/users', jwtCheck,  (req, res) =>{
 
 app.post('/users', jwtCheck, jsonParser, (req, res)=>{
 user.user_metadata = user.user_metadata || {};
-  	user.user_metadata.user_id = user.user_metadata. || "userIdMeta";
+  	user.user_metadata.user_id = user.user_metadata || "userIdMeta";
 	if(User.findOne({'userId': userIdMeta}).count()===0){
 		User
 		.create({
