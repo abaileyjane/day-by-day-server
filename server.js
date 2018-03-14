@@ -30,14 +30,14 @@ var jwtCheck = jwt({
     algorithms: ['RS256']
 });
 
-app.use(jwtCheck);
+// app.use(jwtCheck);
 
 const {User} = require('./models');
 
-app.get('/users/:userIdMeta', jwtCheck,  (req, res) =>{
+app.get('/users/:userIdMeta',  (req, res) =>{
 
-	
-	if(User.findOne({'userId': userIdMeta}).count()===0){
+	console.log('get requestRan', req.params.userIdMeta)
+	if(User.findOne({'userId': req.params.userIdMeta}).count()===0){
 		res.json({habits:[],
 				dailyLog:[]}
 				)
@@ -47,7 +47,7 @@ app.get('/users/:userIdMeta', jwtCheck,  (req, res) =>{
 			res.status(500).json({message:"Internal Server Error"})
 		})
 	}
-	else {User.findOne({'userId': userIdMeta})
+	else {User.findOne({'userId': req.params.userIdMeta})
 		.then(users => {
 			res.json({
 				users: users.map(
@@ -63,12 +63,11 @@ app.get('/users/:userIdMeta', jwtCheck,  (req, res) =>{
 
 
 
-app.post('/users', jwtCheck, jsonParser, (req, res)=>{
-user.user_metadata = user.user_metadata || {};
-  	user.user_metadata.user_id = user.user_metadata || "userIdMeta";
-	if(User.findOne({'userId': userIdMeta}).count()===0){
+app.post('/users', jsonParser, (req, res)=>{
+	if(User.findOne({'userId': req.body.userId}).count()===0){
 		User
 		.create({
+			'userId': req.body.userId,
 			'habits': req.body.habits,
 			'dailyLog': req.body.dailyLog
 		})
@@ -80,13 +79,19 @@ user.user_metadata = user.user_metadata || {};
 	}
 	else{
 	User
-		.findOneAndReplace({'userId': userIdMeta}, 
-			{
-			'habits': req.body.habits,
-			'dailyLog': req.body.dailyLog
-		}
-		)
-		.then(user => res.status(204).json(user))
+		.findOne({'userId': req.body.userId})
+		.remove()
+		.then( User
+			.create({
+				'userId': req.body.userId,
+				'habits': req.body.habits,
+				'dailyLog': req.body.dailyLog
+			})
+			.then(user=> res.status(201).json(user))
+			.catch(err=>{
+				console.error(err);
+				res.status(500).json({message:"Internal Server Error"})
+			}))
 		.catch(err=> {
 			console.log(err);
 			res.status(500).json({message:"Internal Server Error"})})
