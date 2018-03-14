@@ -6,42 +6,48 @@ const formParser= bodyParser.urlencoded({extended: false});
 const mongoose=require('mongoose');
 const path = require('path');
 const cors = require('cors');
-const passport = require('passport')
 const config = require('./config');
-const {localStrategy, jwtStrategy} = require('./auth/strategies.js')
+var jwt = require('express-jwt');
+var jwks = require('jwks-rsa');
 mongoose.Promise=global.Promise;
  
-app.use(jsonParser);
-app.use(cors());
+const {PORT, DATABASE_URL,CLIENT_ORIGIN} = require('./config');
 
-app.use(function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE');
-  if (req.method === 'OPTIONS') {
-    return res.send(204);
-  }
-  next();
+app.use(jsonParser);
+app.use(cors({origin: CLIENT_ORIGIN}));
+
+mongoose.connect(DATABASE_URL);
+
+var jwtCheck = jwt({
+    secret: jwks.expressJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: "https://day-by-day.auth0.com/.well-known/jwks.json"
+    }),
+    audience: 'https://day-by-day-api.herokuapp.com',
+    issuer: "https://day-by-day.auth0.com/",
+    algorithms: ['RS256']
 });
 
-const {PORT, DATABASE_URL} = require('./config');
-
-
-passport.use(localStrategy);
-passport.use(jwtStrategy);
-
-const jwtAuth = passport.authenticate('jwt', { session: false });
-
+app.use(jwtCheck);
 
 const {User} = require('./models');
-app.get('/', (req,res)=>{
-	res.status(200)
-})
 
-app.get('/users',  (req, res) =>{
-	console.log(Date())
-	User
-		.find()
+app.get('/users/:userIdMeta', jwtCheck,  (req, res) =>{
+
+	
+	if(User.findOne({'userId': userIdMeta}).count()===0){
+		res.json({habits:[],
+				dailyLog:[]}
+				)
+		.then(res.status(201))
+		.catch(err=>{
+			console.error(err);
+			res.status(500).json({message:"Internal Server Error"})
+		})
+	}
+	else {User.findOne({'userId': userIdMeta})
 		.then(users => {
 			res.json({
 				users: users.map(
@@ -53,117 +59,41 @@ app.get('/users',  (req, res) =>{
 			console.error(err);
 			res.status(500).json({message:"Internal Server Error"})
 		})
-})
-
-app.get('/users/:userEmail', jwtAuth, (req,res) =>{
-	User
-	.findOne({email:req.params.userEmail})
-	.then(user=>{
-		res.json(user)
-	})
-	.then(res.status(201))
-	.catch(err=>{
-		console.error(err);
-		res.status(500).json({message:'Internal Server Error'})
-	});
-})
+}})
 
 
-app.post('/users', jsonParser, (req,res)=>{
-	const requiredFields = ['email', 'password','firstName', 'lastName'];
-  	const missingField = requiredFields.find(field => !(field in req.body));
 
-  if (missingField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Missing field',
-      location: missingField
-    });
-  }
-
-  const stringFields = ['email', 'password', 'firstName', 'lastName'];
-  const nonStringField = stringFields.find(
-    field => field in req.body && typeof req.body[field] !== 'string'
-  );
-
-  if (nonStringField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Incorrect field type: expected string',
-      location: nonStringField
-    });
-  }
-  const explicityTrimmedFields = ['email', 'password'];
-  const nonTrimmedField = explicityTrimmedFields.find(
-    field => req.body[field].trim() !== req.body[field]
-  );
-
-  if (nonTrimmedField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Cannot start or end with whitespace',
-      location: nonTrimmedField
-    });
-  }
-
-  let {email, password, firstName = '', lastName = ''} = req.body;
-  firstName = firstName.trim();
-  lastName = lastName.trim();
-
-	return User
-		.find({email})
-		.count()
-		.then(count => {
-      		if (count > 0) {
-        		return Promise.reject({
-          			code: 422,
-          			reason: 'ValidationError',
-          			message: 'email already taken',
-          			location: 'email'
-        });
-      }
-      return User.hashPassword(password);
-    })
-		.then(hash=>{
-			return User.create({
-				firstName,
-				lastName,
-				email,
-				password:hash
-			})
-			.then (user => res.status(201).json(user))
-			.catch(err =>{
-				console.log(err);
-				res.status(500).json({message: 'Internal Server Error'})
-			})
+app.post('/users', jwtCheck, jsonParser, (req, res)=>{
+user.user_metadata = user.user_metadata || {};
+  	user.user_metadata.user_id = user.user_metadata || "userIdMeta";
+	if(User.findOne({'userId': userIdMeta}).count()===0){
+		User
+		.create({
+			'habits': req.body.habits,
+			'dailyLog': req.body.dailyLog
 		})
-	})
-
-
-
-app.put('/users/:userEmail', jwtAuth, jsonParser, (req, res)=>{
-	const toUpdate = {};
-	const updatableFields = ['firstName', 'lastName', 'email', 'password', 'habits', 'dailyRecord'];
-
-	updatableFields.forEach(field => {
-		if(field in req.body){
-			toUpdate[field] = req.body[field];
-		}
-	})
-
+		.then(res.status(201))
+		.catch(err=>{
+			console.error(err);
+			res.status(500).json({message:"Internal Server Error"})
+		})
+	}
+	else{
 	User
-		.findOne({email:req.params.userEmail})
-		.update({$set: toUpdate})
+		.findOneAndReplace({'userId': userIdMeta}, 
+			{
+			'habits': req.body.habits,
+			'dailyLog': req.body.dailyLog
+		}
+		)
 		.then(user => res.status(204).json(user))
 		.catch(err=> {
 			console.log(err);
 			res.status(500).json({message:"Internal Server Error"})})
+	}
 })
 
-app.delete('/users/:userEmail', (req, res)=>{
+app.delete('/users/:userEmail', jwtCheck, (req, res)=>{
 	User
 		.findOne({email: req.params.userEmail})
 		.remove()
@@ -205,30 +135,7 @@ function closeServer() {
   });
 }
 
-//authorization section
-const createAuthToken = function(user) {
-  return jwt.sign({user}, config.JWT_SECRET, {
-    subject: user.email,
-    expiresIn: config.JWT_EXPIRY,
-    algorithm: 'HS256'
-  });
-};
 
-const localAuth = passport.authenticate('local', {session: false});
-app.use(bodyParser.json());
-// The user provides a username and password to login
-app.post('/auth/login', localAuth, (req, res) => {
-	console.log('post request fired')
-  const authToken = createAuthToken(req.user.serialize());
-  res.json({authToken});
-});
-
-
-// The user exchanges a valid JWT for a new one with a later expiration
-app.post('/auth/refresh', jwtAuth, (req, res) => {
-  const authToken = createAuthToken(req.user);
-  res.json({authToken});
-});
 
 if (require.main === module) {
   runServer(DATABASE_URL).catch(err => console.error(err));
