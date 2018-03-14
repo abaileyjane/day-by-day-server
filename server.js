@@ -49,11 +49,8 @@ app.get('/users/:userIdMeta',  (req, res) =>{
 	}
 	else {User.findOne({'userId': req.params.userIdMeta})
 		.then(users => {
-			res.json({
-				users: users.map(
-					(user)=>user.serialize())
-			});
-		})
+			res.json(users.serialize())
+			})
 		.then(res.status(201))
 		.catch(err=>{
 			console.error(err);
