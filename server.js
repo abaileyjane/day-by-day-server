@@ -34,10 +34,9 @@ app.use(jwtCheck);
 
 const {User} = require('./models');
 
-app.get('/users', jwtCheck,  (req, res) =>{
+app.get('/users/:userIdMeta', jwtCheck,  (req, res) =>{
 
-	user.user_metadata = user.user_metadata || {};
-  	user.user_metadata.user_id = user.user_metadata || "userIdMeta";
+	
 	if(User.findOne({'userId': userIdMeta}).count()===0){
 		res.json({habits:[],
 				dailyLog:[]}
