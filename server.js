@@ -30,13 +30,11 @@ var jwtCheck = jwt({
     algorithms: ['RS256']
 });
 
-// app.use(jwtCheck);
-
 const {User} = require('./models');
 
+//get request to return user habits and daily logs
 app.get('/users/:userIdMeta',  (req, res) =>{
 
-	console.log('get requestRan', req.params.userIdMeta)
 	if(User.findOne({'userId': req.params.userIdMeta}).count()===0){
 		res.json({habits:[],
 				dailyLog:[]}
@@ -59,9 +57,10 @@ app.get('/users/:userIdMeta',  (req, res) =>{
 }})
 
 
-
+//post request to either create a new user or update informaton on existing user
 app.post('/users', jsonParser, (req, res)=>{
 	if(User.findOne({'userId': req.body.userId}).count()===0){
+	
 		User
 		.create({
 			'userId': req.body.userId,
@@ -74,7 +73,7 @@ app.post('/users', jsonParser, (req, res)=>{
 			res.status(500).json({message:"Internal Server Error"})
 		})
 	}
-	else{
+
 	User
 		.findOne({'userId': req.body.userId})
 		.remove()
@@ -87,15 +86,15 @@ app.post('/users', jsonParser, (req, res)=>{
 			.then(user=> res.status(201).json(user))
 			.catch(err=>{
 				console.error(err);
-				res.status(500).json({message:"Internal Server Error"})
+				res.status(500).json({message:" Internal Server Error"})
 			}))
 		.catch(err=> {
 			console.log(err);
 			res.status(500).json({message:"Internal Server Error"})})
-	}
+	
 })
 
-app.delete('/users/:userEmail', jwtCheck, (req, res)=>{
+app.delete('/users/:userEmail', (req, res)=>{
 	User
 		.findOne({email: req.params.userEmail})
 		.remove()

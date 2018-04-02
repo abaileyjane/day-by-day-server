@@ -24,15 +24,14 @@ function seedUserData(){
   let userData=[];
   for (let i=0; i<5; i++){
     let newTestUser = {
-      firstName: faker.Name.firstName(),
-      LastName: faker.Name.firstName(),
-      email: faker.Internet.email(),
-      password: faker.random.word()
+      habits: [{title:faker.random.word()}],
+      dailyLog:  [],
+      userId: faker.random.word()
     };
     userData.push(newTestUser);
   }
 
-  return User.insertMany(charData);
+  return User.insertMany(userData);
 }
 
 describe('API Function', function(){
@@ -51,36 +50,15 @@ describe('API Function', function(){
   })
 
   describe("get requests", function(){
-
-    it('should return a status of 200 on user get request', function(){
-      return chai.request(app)
-      .get('/users')
-      .then(function(res){
-        expect(res).to.have.status(200);
-      })
-    })
-
-    it('should return list of users', function(){
-      return chai.request(app)
-      .get('/users')
-       .then(function(res){
-        expect(res.body.users[0]).to.be.a('object');
-        expect(res.body.users[0].firstName).to.have.lengthOf.at.least(1);
-        expect(res.body.users[0].lastName).to.have.lengthOf.at.least(1);
-        expect(res.body.users[0].email).to.have.lengthOf.at.least(1);
-        expect(res.body.users[0]).to.include.keys('firstName','lastName','email');
-        })
-        expect(res).to.have.status(201)
-      })
     it('should return one user', function(){
       User
-        .findOne
+        .findOne()
         .then(function(user){
-          let email=user.email;
+          let userId=user.userId;
           return chai.request(app)
-            .get(`users/${email}`)
+            .get(`users/${userId}`)
             .then(function(res){
-              expect(res.body).to.include.keys('firstName','lastName','email','habits','dailyLog');
+              expect(res.body).to.include.keys('habits','dailyLog');
               expect(res.body).to.be.a('object');
               expect(res.body).to.be.json;
               expect(res).to.have.status(201)
@@ -92,10 +70,9 @@ describe('API Function', function(){
   describe('Post Requests', function(){
     it('should create new user on post', function(){
      let newTestUser = {
-      firstName: faker.Name.firstName(),
-      LastName: faker.Name.firstName(),
-      email: faker.Internet.email(),
-      password: faker.random.word()
+      userId: 'fhthe5ehd',
+      habits: [{title:'feed cat'}],
+      dailyLog:[{date: "", log: []}]
     };
       return chai.request(app)
         .post('/users')
@@ -104,41 +81,35 @@ describe('API Function', function(){
           expect(res).to.have.status(201);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.include.keys('firstName','lastName','email','habits','dailyLog')
-          expect(res.body.firstName).to.equal(newTestUser.firstName);
-          expect(res.body.lastName).to.equal(newTestUser.lastName);
-          expect(res.body.email).to.equal(newTestUser.email);
-          expect(res.body.password).to.equal(newTestUser.password);
-
+          expect(res.body).to.include.keys('userId','dailyLog','habits')
+          expect(res.body.habits).to.be.a('array');
+          expect(res.body.dailyLog).to.be.a('array');
         })
 
     })
-  })
 
-  describe('Put requests', function(){
-    it('should update user', function(){
-      const updatedUser = {
-        habits:[{title: "feed Cat"}]
-      }
-      return User
-        .findOne()
-        .then(function(user){
-          updatedUser.email=user.email;
-          return chai.request(app)
-          .put(`/users/${updatedUser.email}`)
-          .send(updatedUser);
-        })
+    it('should update user on post request', function(){
+     let updateTestUser = {
+      userId: 'fhthe5ehd',
+      habits: [{title:'do laundry'}],
+      dailyLog:[{date: "", log: []}]
+    };
+      return chai.request(app)
+        .post('/users')
+        .send(updateTestUser)
         .then(function(res){
-          expect(res).to.have.status(204);
-          return User.findOne({email: `updatedUser.email`});
+          expect(res).to.have.status(201);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.include.keys('userId','dailyLog','habits')
+          expect(res.body.habits[0]).to.have.property('title','do laundry');
+          expect(res.body.dailyLog).to.be.a('array');
         })
-        .then(function(user){
-          expect(user.habits).to.have.lengthOf(1);
-          expect(user.dailyLog).to.have.lengthOf(0);
-          expect(user).to.include.keys('firstName','lastName','email','habits','dailyLog')
-        })
+
     })
-  })
+
+    })
+  
 
   describe('delete endpoint', function(){
     it('should delete user', function(){
@@ -154,6 +125,6 @@ describe('API Function', function(){
       })
     })
   })
-	})
+})
 
 

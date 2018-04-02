@@ -8,7 +8,7 @@ const userSchema = mongoose.Schema({
 	dailyLog:[
 		{date: String,
 			 log:[
-				{habit:String, completed: Boolean}
+				{habit:String, complete: Boolean}
 				]
 		}
 	]
