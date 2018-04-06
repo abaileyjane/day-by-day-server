@@ -27,7 +27,8 @@
     "node": "^9.5.0",
     "passport": "^0.4.0",
     "passport-jwt": "^3.0.1",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "react-addons-update": "^15.6.2"
   },
   "devDependencies": {
     "mocha": "^5.0.1"
